@@ -179,5 +179,5 @@ class DrawingView(context: Context,attrs:AttributeSet): View(context,attrs) {
             invalidate() // Invalidate the whole view. If the view is visible
         }
     }
-    internal inner class CustomPath(var color:Int,var brushThickness:Float):Path()
+    internal inner class CustomPath(var color:Int, var brushThickness:Float):Path()
 }

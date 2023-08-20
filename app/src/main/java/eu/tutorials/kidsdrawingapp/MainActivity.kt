@@ -31,9 +31,9 @@ class MainActivity : AppCompatActivity() {
     private var drawingView: DrawingView? = null
     private var mImageButtonCurrentPaint: ImageButton? = null // A variable for current color is picked from color pallet.
 
-    var customProgressDialog: Dialog? = null
+    private var customProgressDialog: Dialog? = null
 
-  val openGalleryLauncher:ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){result->
+  private val openGalleryLauncher:ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result->
     if (result.resultCode == RESULT_OK && result.data != null){
             val imageBackground:ImageView = findViewById(R.id.iv_background)
             imageBackground.setImageURI(result.data?.data)
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     /** create an ActivityResultLauncher with MultiplePermissions since we are requesting
      * both read and write
      */
-    val requestPermission: ActivityResultLauncher<Array<String>> =
+    private val requestPermission: ActivityResultLauncher<Array<String>> =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach {
                 val perMissionName = it.key
@@ -125,21 +125,21 @@ class MainActivity : AppCompatActivity() {
         brushDialog.setContentView(R.layout.dialog_brush_size)
         brushDialog.setTitle("Brush size :")
         val smallBtn: ImageButton = brushDialog.findViewById(R.id.ib_small_brush)
-        smallBtn.setOnClickListener(View.OnClickListener {
+        smallBtn.setOnClickListener {
             drawingView?.setSizeForBrush(10.toFloat())
             brushDialog.dismiss()
-        })
+        }
         val mediumBtn: ImageButton = brushDialog.findViewById(R.id.ib_medium_brush)
-        mediumBtn.setOnClickListener(View.OnClickListener {
+        mediumBtn.setOnClickListener {
             drawingView?.setSizeForBrush(20.toFloat())
             brushDialog.dismiss()
-        })
+        }
 
         val largeBtn: ImageButton = brushDialog.findViewById(R.id.ib_large_brush)
-        largeBtn.setOnClickListener(View.OnClickListener {
+        largeBtn.setOnClickListener {
             drawingView?.setSizeForBrush(30.toFloat())
             brushDialog.dismiss()
-        })
+        }
         brushDialog.show()
     }
 
@@ -307,7 +307,7 @@ class MainActivity : AppCompatActivity() {
                    //We switch from io to ui thread to show a toast
                     runOnUiThread {
                         cancelProgressDialog()
-                        if (!result.isEmpty()) {
+                        if (result.isNotEmpty()) {
                             Toast.makeText(
                                 this@MainActivity,
                                 "File saved successfully :$result",
@@ -345,7 +345,7 @@ class MainActivity : AppCompatActivity() {
         /*scanFile is used to scan the file when the connection is established with MediaScanner.*/
         MediaScannerConnection.scanFile(
             this@MainActivity, arrayOf(result), null
-        ) { path, uri ->
+        ) { _, uri ->
             // This is used for sharing the image after it has being stored in the storage.
             val shareIntent = Intent()
             shareIntent.action = Intent.ACTION_SEND
@@ -374,7 +374,7 @@ class MainActivity : AppCompatActivity() {
     private fun showProgressDialog() {
         customProgressDialog = Dialog(this@MainActivity)
 
-        /*Set the screen content from a layout resource.
+        /**Set the screen content from a layout resource.
         The resource will be inflated, adding all top-level views to the screen.*/
         customProgressDialog?.setContentView(R.layout.dialog_custom_progress)
 
