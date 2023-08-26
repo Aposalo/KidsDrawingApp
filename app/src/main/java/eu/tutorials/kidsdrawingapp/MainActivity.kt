@@ -220,9 +220,9 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
-    /**  create rationale dialog
-     * Shows rationale dialog for displaying why the app needs permission
-     * Only shown if the user has denied the permission request previously
+    /**  Create rationale dialog
+     * Shows rationale dialog for displaying why the app needs permission,
+     * only shown if the user has denied the permission request previously
      */
     private fun showRationaleDialog(
         title: String,
