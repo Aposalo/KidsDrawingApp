@@ -1,4 +1,4 @@
-package eu.tutorials.kidsdrawingapp
+package eu.tutorials.kidsdrawingapp.activities
 
 import android.Manifest
 import android.content.Intent
@@ -13,9 +13,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import eu.tutorials.kidsdrawingapp.FileOperations
+import eu.tutorials.kidsdrawingapp.R
 import eu.tutorials.kidsdrawingapp.databinding.ActivityMainBinding
+import eu.tutorials.kidsdrawingapp.dialogs.BrushSizeChooserDialog
 
-class MainActivity : AppCompatActivity() {
+open class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var mImageButtonCurrentPaint: ImageButton? = null
@@ -61,8 +64,8 @@ class MainActivity : AppCompatActivity() {
         binding.ibUndo.setOnClickListener {
             binding.drawingView.onClickUndo()
         }
-        binding.ibSave.setOnClickListener{
-            val fileOperations = FileOperations(this, binding)
+        binding.ibSave.setOnClickListener {
+            val fileOperations = FileOperations(this,this, binding)
             fileOperations.getSaveOperationForBitmapFile()
         }
     }
@@ -109,7 +112,7 @@ class MainActivity : AppCompatActivity() {
         }
         else {
             requestPermission.launch(
-                arrayOf(
+                arrayOf (
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )

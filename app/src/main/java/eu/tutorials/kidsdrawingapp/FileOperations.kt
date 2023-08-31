@@ -1,6 +1,7 @@
 package eu.tutorials.kidsdrawingapp
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -16,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import eu.tutorials.kidsdrawingapp.databinding.ActivityMainBinding
+import eu.tutorials.kidsdrawingapp.dialogs.ProgressDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,14 +25,17 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-class FileOperations(private val activity: AppCompatActivity, private val binding: ActivityMainBinding) {
+class FileOperations (private var context : Context,
+                     private val activity: AppCompatActivity,
+                     private var binding: ActivityMainBinding) {
 
-    private val progressDialog = ProgressDialog(activity.applicationContext)
+    private lateinit var progressDialog  : ProgressDialog
 
     fun getSaveOperationForBitmapFile() {
+        progressDialog  = ProgressDialog(context)
         if (isReadStorageAllowed()) {
-            progressDialog.showProgressDialog()
-            activity.lifecycleScope.launch{
+            progressDialog.show()
+            activity.lifecycleScope.launch {
                 saveBitmapFile(getBitmapFromView(binding.flDrawingViewContainer))
             }
         }
@@ -62,7 +67,7 @@ class FileOperations(private val activity: AppCompatActivity, private val bindin
                 mBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes)
 
                 val f = File(
-                    activity.applicationContext.externalCacheDir?.absoluteFile.toString()
+                    context.externalCacheDir?.absoluteFile.toString()
                             + File.separator + "KidDrawingApp_" + System.currentTimeMillis() / 1000 + ".jpg"
                 )
                 val fo =
@@ -72,16 +77,16 @@ class FileOperations(private val activity: AppCompatActivity, private val bindin
                 result = f.absolutePath // The file absolute path is return as a result.
                 //We switch from io to ui thread to show a toast
                 activity.runOnUiThread {
-                    progressDialog.cancelProgressDialog()
+                    progressDialog.dismiss()
                     if (result.isNotEmpty()) {
                         shareImage(result)
                     }
                 }
             }
             catch (e: Exception) {
-                result = ""
+                result = String()
                 Toast.makeText(
-                    activity.applicationContext,
+                    context,
                     e.message,
                     Toast.LENGTH_SHORT
                 ).show()
@@ -94,13 +99,13 @@ class FileOperations(private val activity: AppCompatActivity, private val bindin
     private fun shareImage(result: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val uri = FileProvider.getUriForFile(
-                activity.applicationContext,
+                context,
                 "eu.kidsdrawingapp.fileprovider",
                 File(result))
             sentImageThroughIntent(uri)
         }
         else{
-            MediaScannerConnection.scanFile(activity.applicationContext, arrayOf(result), null) {
+            MediaScannerConnection.scanFile(context, arrayOf(result), null) {
                 _, uri ->
                 sentImageThroughIntent(uri)
             }
@@ -109,7 +114,7 @@ class FileOperations(private val activity: AppCompatActivity, private val bindin
 
     private fun sentImageThroughIntent(uri: Uri?) {
         val shareIntent = getShareIntent(uri)
-        activity.applicationContext.startActivity(
+        context.startActivity(
             Intent.createChooser(
                 shareIntent,
                 "Share image using.."

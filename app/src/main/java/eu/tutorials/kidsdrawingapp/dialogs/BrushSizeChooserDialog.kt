@@ -1,4 +1,4 @@
-package eu.tutorials.kidsdrawingapp
+package eu.tutorials.kidsdrawingapp.dialogs
 
 import android.app.Dialog
 import android.content.Context
@@ -15,7 +15,7 @@ class BrushSizeChooserDialog(context: Context, private var mainBinding: Activity
         setContentView(binding.root)
         this.setTitle("Brush size :")
         binding.ibSmallBrush.setOnClickListener(onClickSetSizeForBrush(10.toFloat()))
-        binding.ibMediumBrush.setOnClickListener (onClickSetSizeForBrush(20.toFloat()))
+        binding.ibMediumBrush.setOnClickListener(onClickSetSizeForBrush(20.toFloat()))
         binding.ibLargeBrush.setOnClickListener(onClickSetSizeForBrush(30.toFloat()))
     }
 
