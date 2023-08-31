@@ -11,8 +11,8 @@ class BrushSizeChooserDialog(context: Context, private var mainBinding: Activity
     private var binding = DialogBrushSizeBinding.inflate(layoutInflater)
 
     init {
+        binding = DialogBrushSizeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        this.setContentView(R.layout.dialog_brush_size)
         this.setTitle("Brush size :")
         binding.ibSmallBrush.setOnClickListener(onClickSetSizeForBrush(10.toFloat()))
         binding.ibMediumBrush.setOnClickListener (onClickSetSizeForBrush(20.toFloat()))
