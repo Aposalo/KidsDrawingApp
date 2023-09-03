@@ -9,6 +9,7 @@ import eu.tutorials.kidsdrawingapp.databinding.DialogBrushSizeBinding
 class BrushSizeChooserDialog(context: Context, private var mainBinding: ActivityMainBinding) : Dialog(context) {
 
     private var binding = DialogBrushSizeBinding.inflate(layoutInflater)
+    var brushSize = 20.toFloat()
 
     init {
         binding = DialogBrushSizeBinding.inflate(layoutInflater)
@@ -21,6 +22,7 @@ class BrushSizeChooserDialog(context: Context, private var mainBinding: Activity
 
     private fun onClickSetSizeForBrush(size: Float):View.OnClickListener {
         return View.OnClickListener {
+            brushSize = size
             mainBinding.drawingView.setSizeForBrush(size)
             this.dismiss()
         }

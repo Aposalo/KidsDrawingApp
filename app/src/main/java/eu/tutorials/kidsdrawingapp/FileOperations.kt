@@ -30,13 +30,14 @@ class FileOperations (private var context : Context,
                      private var binding: ActivityMainBinding) {
 
     private lateinit var progressDialog  : ProgressDialog
+    var imageFilePath: String? = null
 
-    fun getSaveOperationForBitmapFile() {
+    fun getSaveOperationForBitmapFile(filepath:String = String()) {
         progressDialog  = ProgressDialog(context)
         if (isReadStorageAllowed()) {
             progressDialog.show()
             activity.lifecycleScope.launch {
-                saveBitmapFile(getBitmapFromView(binding.flDrawingViewContainer))
+                saveBitmapFile(getBitmapFromView(binding.flDrawingViewContainer),filepath)
             }
         }
     }
@@ -48,7 +49,10 @@ class FileOperations (private var context : Context,
         return result == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun getBitmapFromView(view: View): Bitmap {
+    private fun getBitmapFromView(view: View): Bitmap? {
+        if (view.width == 0 && view.height == 0){
+            return null
+        }
         val returnedBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(returnedBitmap)
         val bgDrawable = view.background
@@ -57,29 +61,32 @@ class FileOperations (private var context : Context,
         return returnedBitmap
     }
 
-    private suspend fun saveBitmapFile(mBitmap: Bitmap) : String {
-        var result: String
+    private suspend fun saveBitmapFile(mBitmap: Bitmap?, filepath :String = String()) : String {
+        var result = filepath
         withContext(Dispatchers.IO) {
             try {
-                val bytes = ByteArrayOutputStream() // Creates a new byte array output stream.
-                // The buffer capacity is initially 32 bytes, though its size increases if necessary.
+                if (result == String()) {
+                    val bytes = ByteArrayOutputStream() // Creates a new byte array output stream.
+                    // The buffer capacity is initially 32 bytes, though its size increases if necessary.
 
-                mBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes)
+                    mBitmap?.compress(Bitmap.CompressFormat.JPEG, 90, bytes)
 
-                val f = File(
-                    context.externalCacheDir?.absoluteFile.toString()
-                            + File.separator + "KidDrawingApp_" + System.currentTimeMillis() / 1000 + ".jpg"
-                )
-                val fo =
-                    FileOutputStream(f) // Creates a file output stream to write to the file represented by the specified object.
-                fo.write(bytes.toByteArray()) // Writes bytes from the specified byte array to this file output stream.
-                fo.close() // Closes this file output stream and releases any system resources associated with this stream. This file output stream may no longer be used for writing bytes.
-                result = f.absolutePath // The file absolute path is return as a result.
+                    val f = File(
+                        context.externalCacheDir?.absoluteFile.toString()
+                                + File.separator + "KidDrawingApp_" + System.currentTimeMillis() / 1000 + ".jpg"
+                    )
+                    val fo =
+                        FileOutputStream(f) // Creates a file output stream to write to the file represented by the specified object.
+                    fo.write(bytes.toByteArray()) // Writes bytes from the specified byte array to this file output stream.
+                    fo.close() // Closes this file output stream and releases any system resources associated with this stream. This file output stream may no longer be used for writing bytes.
+                    result = f.absolutePath // The file absolute path is return as a result.
+                }
                 //We switch from io to ui thread to show a toast
                 activity.runOnUiThread {
                     progressDialog.dismiss()
                     if (result.isNotEmpty()) {
-                        shareImage(result)
+                        imageFilePath = result
+                        if (mBitmap != null) shareImage(result)
                     }
                 }
             }

@@ -13,17 +13,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import eu.tutorials.kidsdrawingapp.DrawingViewModel
 import eu.tutorials.kidsdrawingapp.FileOperations
 import eu.tutorials.kidsdrawingapp.R
 import eu.tutorials.kidsdrawingapp.databinding.ActivityMainBinding
 import eu.tutorials.kidsdrawingapp.dialogs.BrushSizeChooserDialog
 
-open class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var mImageButtonCurrentPaint: ImageButton? = null
+    private lateinit var drawingViewModel: DrawingViewModel
+    private var brushDialog : BrushSizeChooserDialog? = null
+    private lateinit var colorList: Map<String, ImageButton>
 
-  private val openGalleryLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result->
+  private val openGalleryLauncher: ActivityResultLauncher<Intent> =
+      registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result->
         if (result.resultCode == RESULT_OK && result.data != null)
             binding.ivBackground.setImageURI(result.data?.data)
     }
@@ -31,7 +36,7 @@ open class MainActivity : AppCompatActivity() {
     /** create an ActivityResultLauncher with MultiplePermissions since we are requesting
      * both read and write
      */
-    private val requestPermission: ActivityResultLauncher<Array<String>> =
+    private val requestOpenGalleryPermission =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach {
                 val isGranted = it.value
@@ -42,13 +47,37 @@ open class MainActivity : AppCompatActivity() {
             }
         }
 
+    private val requestSaveFilePermission =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.entries.forEach {
+                val isGranted = it.value
+                if (isGranted) {
+                    val fileOperations = FileOperations(this, this, binding)
+                    fileOperations.getSaveOperationForBitmapFile()
+                    drawingViewModel.paintModel.filePath = fileOperations.imageFilePath!!
+                }
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.drawingView.setSizeForBrush(20.toFloat())
+        drawingViewModel = DrawingViewModel(binding.drawingView)
+        val fileOperations = FileOperations(this, this, binding)
+        fileOperations.getSaveOperationForBitmapFile(drawingViewModel.paintModel.filePath)
+        colorList = mapOf("0" to binding.color0,
+            "1" to binding.color1,
+            "2" to binding.color2,
+            "3" to binding.color3,
+            "4" to binding.color4,
+            "5" to binding.color5,
+            "6" to binding.color6,
+            "7" to binding.color7,
+        )
+        binding.drawingView.setSizeForBrush(drawingViewModel.paintModel.brushSize)
         val linearLayoutPaintColors = binding.llPaintColors
-        mImageButtonCurrentPaint = linearLayoutPaintColors[1] as ImageButton
+        mImageButtonCurrentPaint = linearLayoutPaintColors[drawingViewModel.paintModel.paintColorId] as ImageButton
         mImageButtonCurrentPaint?.setImageDrawable(
             ContextCompat.getDrawable(
                 this,
@@ -59,14 +88,37 @@ open class MainActivity : AppCompatActivity() {
             showBrushSizeChooserDialog()
         }
         binding.ibGallery.setOnClickListener {
-            requestStoragePermission()
+            requestReadStoragePermission()
         }
         binding.ibUndo.setOnClickListener {
             binding.drawingView.onClickUndo()
         }
         binding.ibSave.setOnClickListener {
-            val fileOperations = FileOperations(this,this, binding)
-            fileOperations.getSaveOperationForBitmapFile()
+            requestWriteStoragePermission()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        drawingViewModel.paintModel.brushSize = brushDialog?.brushSize ?: 20.toFloat()
+        drawingViewModel.paintModel.drawingView = binding.drawingView
+    }
+
+    private fun requestWriteStoragePermission() {
+        if (
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        ) {
+            showRationaleDialog()
+        } else {
+            requestSaveFilePermission.launch(
+                arrayOf(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            )
         }
     }
 
@@ -74,8 +126,8 @@ open class MainActivity : AppCompatActivity() {
      * Method is used to launch the dialog to select different brush sizes.
      */
     private fun showBrushSizeChooserDialog() {
-        val brushDialog = BrushSizeChooserDialog(this, binding)
-        brushDialog.show()
+        brushDialog = BrushSizeChooserDialog(this, binding)
+        brushDialog?.show()
     }
 
     /**
@@ -87,6 +139,9 @@ open class MainActivity : AppCompatActivity() {
         if (view !== mImageButtonCurrentPaint) {
             val imageButton = view as ImageButton
             val colorTag = imageButton.tag.toString()
+            val colorClicked = colorList.filter { it.value.tag == colorTag }
+            val id = colorClicked.keys.toList()[0]
+            drawingViewModel.paintModel.paintColorId = id.toInt()
             binding.drawingView.setColor(colorTag)
             imageButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.pallet_pressed))
             mImageButtonCurrentPaint?.setImageDrawable(
@@ -101,7 +156,7 @@ open class MainActivity : AppCompatActivity() {
 
 
     //create a method to requestStorage permission
-    private fun requestStoragePermission() {
+    private fun requestReadStoragePermission() {
     // Check if the permission was denied and show rationale
         if (
             ActivityCompat.shouldShowRequestPermissionRationale(
@@ -111,10 +166,10 @@ open class MainActivity : AppCompatActivity() {
             showRationaleDialog()
         }
         else {
-            requestPermission.launch(
+            requestOpenGalleryPermission.launch(
                 arrayOf (
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
                 )
             )
         }

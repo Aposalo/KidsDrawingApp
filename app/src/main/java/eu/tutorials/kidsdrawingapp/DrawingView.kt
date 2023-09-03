@@ -7,7 +7,7 @@ import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 
-class DrawingView(context: Context,attrs:AttributeSet): View(context,attrs) {
+class DrawingView(context: Context, attrs:AttributeSet): View(context, attrs) {
     private var mDrawPath: CustomPath? = null // An variable of CustomPath inner class to use it further.
     private var mCanvasBitmap: Bitmap? = null // An instance of the Bitmap.
 
